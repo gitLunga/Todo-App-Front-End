@@ -1,5 +1,5 @@
 import React from 'react';
-import './../styles/Task.css';
+import './styles/Task.css';
 
 const TaskItem = ({ task, onComplete, onDelete }) => {
   const getPriorityClass = () => {

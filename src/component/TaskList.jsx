@@ -1,6 +1,6 @@
 import React from 'react';
 import TaskItem from './TaskItem';
-import './../styles/Task.css';
+import './styles/Task.css';
 
 const TaskList = ({ tasks, onComplete, onDelete }) => {
   if (tasks.length === 0) {

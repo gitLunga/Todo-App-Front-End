@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './../styles/Task.css';
+import './styles/Task.css';
 
 const TaskForm = ({ onSubmit }) => {
   const [title, setTitle] = useState('');

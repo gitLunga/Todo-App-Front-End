@@ -1,5 +1,5 @@
 import React from 'react';
-import './../styles/Task.css';
+import './styles/Task.css';
 
 const FilterControls = ({ currentFilter, onFilterChange }) => {
   const filters = [
