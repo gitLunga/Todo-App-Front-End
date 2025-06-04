@@ -1,33 +1,82 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import './styles/Task.css';
+import { toast } from 'react-toastify';
 
-const TaskForm = ({ onSubmit }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [priority, setPriority] = useState('Medium');
 
-  const handleSubmit = (e) => {
+const TaskForm = ({ taskId }) => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    dueDate: '',
+    priority: 'Medium'
+  });
+
+  // Load task data if editing
+  React.useEffect(() => {
+    if (taskId) {
+      const fetchTask = async () => {
+        try {
+          const response = await api.get(`/api/Todo/GetTaskById/${taskId}`);
+          const task = response.data;
+          setFormData({
+            title: task.title,
+            description: task.description,
+            dueDate: task.dueDate.split('T')[0], // Format date for input
+            priority: task.priority
+          });
+        } catch (error) {
+          console.error('Error fetching task:', error);
+        }
+      };
+      fetchTask();
+    }
+  }, [taskId]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title.trim()) return;
-    
-    const newTask = {
-      title,
-      description,
-      dueDate,
-      priority,
-    };
-    
-    onSubmit(newTask);
-    resetForm();
+  
+    if (!formData.title.trim()) {
+      toast.error('Title is required');
+      return;
+    }
+  
+    try {
+      if (taskId) {
+        await api.put(`/Todo/UpdateTask/${taskId}`, {
+          Title: formData.title,
+          Description: formData.description,
+          DueDate: formData.dueDate,
+          Priority: formData.priority,
+          IsCompleted: false
+        });
+        toast.success('Task updated successfully!');
+      } else {
+        await api.post('/Todo/CreateTask', {
+          Title: formData.title,
+          Description: formData.description,
+          DueDate: formData.dueDate,
+          Priority: formData.priority
+        });
+        toast.success('Task added successfully!');
+      }
+      navigate('/tasks');
+    } catch (error) {
+      console.error('Error saving task:', error);
+      toast.error('Failed to save task. Please try again.');
+    }
   };
-
-  const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setDueDate('');
-    setPriority('Medium');
-  };
+  
 
   return (
     <form className="task-form" onSubmit={handleSubmit}>
@@ -36,8 +85,9 @@ const TaskForm = ({ onSubmit }) => {
         <input
           type="text"
           id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
           required
         />
       </div>
@@ -46,8 +96,9 @@ const TaskForm = ({ onSubmit }) => {
         <label htmlFor="description">Description</label>
         <textarea
           id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
         />
       </div>
       
@@ -57,8 +108,9 @@ const TaskForm = ({ onSubmit }) => {
           <input
             type="date"
             id="dueDate"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
+            name="dueDate"
+            value={formData.dueDate}
+            onChange={handleChange}
             min={new Date().toISOString().split('T')[0]}
           />
         </div>
@@ -67,8 +119,9 @@ const TaskForm = ({ onSubmit }) => {
           <label htmlFor="priority">Priority</label>
           <select
             id="priority"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
+            name="priority"
+            value={formData.priority}
+            onChange={handleChange}
           >
             <option value="Low">Low</option>
             <option value="Medium">Medium</option>
@@ -78,7 +131,7 @@ const TaskForm = ({ onSubmit }) => {
       </div>
       
       <button type="submit" className="add-task-btn">
-        Add Task
+        {taskId ? 'Update Task' : 'Add Task'}
       </button>
     </form>
   );
